@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>GitHub Repositories</title>
+</head>
+<body>
+    <div id="app">
+        <h1>GitHub Repositories</h1>
+        <label for="username">Enter GitHub username:</label>
+        <input type="text" id="username" placeholder="Enter GitHub username">
+        <button onclick="getRepositories()">Get Repositories</button><br>
+        <br><div id="pagination" style="display: none;">
+            <button onclick="prevPage()">Previous</button>
+            <span id="currentPage">1</span>
+            <button onclick="nextPage()">Next</button>
+        </div>
+        <ul id="repoList"></ul>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+<script>
+
+let currentPage = 1;
+const repositoriesPerPage = 4;
+let totalRepositories = 0;
+
+function getRepositories() {
+    const username = document.getElementById("username").value;
+    const repoList = document.getElementById("repoList");
+    const pagination = document.getElementById("pagination");
+
+    // Clear previous list items
+    repoList.innerHTML = "";
+
+    // Fetch GitHub repositories using the GitHub API
+    fetch(`https://api.github.com/users/${username}/repos?per_page=100`)
+        .then(response => response.json())
+        .then(repositories => {
+            totalRepositories = repositories.length;
+
+            // Show pagination after fetching repositories
+            pagination.style.display = totalRepositories > repositoriesPerPage ? "block" : "none";
+
+            const startIndex = (currentPage - 1) * repositoriesPerPage;
+            const endIndex = startIndex + repositoriesPerPage;
+            const currentRepositories = repositories.slice(startIndex, endIndex);
+
+           // Inside the getRepositories function, modify the topics part
+currentRepositories.forEach(repo => {
+    const listItem = document.createElement("li");
+    listItem.innerHTML = `<a href="${repo.html_url}" target="_blank">${repo.name}</a>`;
+    
+    // Include topics for the repository
+    if (repo.topics && repo.topics.length > 0) {
+        const topicsContainer = document.createElement("div");
+        topicsContainer.className = "topics";
+
+        repo.topics.forEach(topic => {
+            const topicBox = document.createElement("div");
+            topicBox.className = "topic";
+            topicBox.textContent = topic;
+            topicsContainer.appendChild(topicBox);
+        });
+
+        listItem.appendChild(topicsContainer);
+    }
+
+    repoList.appendChild(listItem);
+});
+
+
+            updatePageNumber();
+        })
+       
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        getRepositories();
+    }
+}
+
+function nextPage() {
+    const username = document.getElementById("username").value;
+
+    // Check if the "Next" button should be disabled
+    if (currentPage * repositoriesPerPage < totalRepositories) {
+        currentPage++;
+        getRepositories();
+    }
+}
+
+function updatePageNumber() {
+    const totalPages = Math.ceil(totalRepositories / repositoriesPerPage);
+    document.getElementById("currentPage").innerText = `${currentPage}...${totalPages}`;
+
+    // Disable "Next" button if the current page exceeds total pages
+    const nextButton = document.getElementById("nextButton");
+    nextButton.disabled = currentPage >= totalPages;
+}
+
+// Initial load
+getRepositories();
+
+</script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+#app {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px;
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+li {
+    width: 48%; /* Two columns with a small gap */
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+	
+}
+
+li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+li div {
+    font-size: 0.9em;
+    color: #666;
+	font-size: 0.9em;
+    color: #666;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+    .topic {
+    background-color: #3498db;
+    color: #fff;
+    padding: 5px;
+    margin: 2px;
+    border-radius: 3px;
+}
+
+
+
+</style>
+
